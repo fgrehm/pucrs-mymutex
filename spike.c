@@ -6,7 +6,7 @@
 #define NUM_PROCS 5
 #define MULTIPLIER 200
 
-sem_t semaphores[NUM_PROCS-1];
+my_mutex mutexes[NUM_PROCS-1];
 
 void *print_numbers(void* arg) {
   int tid = (int)(long int)arg;
@@ -14,23 +14,24 @@ void *print_numbers(void* arg) {
   int end = (tid + 1) * MULTIPLIER;
 
   if (tid > 0) {
-    sem_wait(&semaphores[tid-1]);
+    m_lock(&mutexes[tid-1], tid);
   }
 
   int i;
   for (i = begin; i <= end; i++) {
-    printf("[%d] %04d\n", tid+1, i);
+    printf("[%d] %04d\n", tid, i);
   }
 
   if (tid < NUM_PROCS-1) {
-    sem_post(&semaphores[tid]);
+    m_unlock(&mutexes[tid], tid);
   }
 }
 
 int main() {
   long int i;
   for (i = 0; i < NUM_PROCS-1; i++) {
-    sem_init(&semaphores[i], 0, 0);
+    m_init(&mutexes[i], NUM_PROCS);
+    m_lock(&mutexes[i], i);
   }
 
   pthread_t printers[NUM_PROCS];
@@ -39,6 +40,5 @@ int main() {
   }
 
   pthread_exit(0);
-  deinit();
   return 0;
 }
