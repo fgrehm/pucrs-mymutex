@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include "mymutex.h"
 
 #define NUM_PROCS 5
 #define MULTIPLIER 200
