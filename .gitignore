@@ -1,0 +1,10 @@
+
+*.o
+dist
+build
+testboxutil
+nbproject/private
+*.swp
+core
+spike
+
