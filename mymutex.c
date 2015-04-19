@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "mymutex.h"
 
-static int m_check_others();
-
 typedef struct my_mutex_struct {
   int* level;
   int* waiting;
@@ -58,31 +56,17 @@ void m_lock(int const tid) {
 
   ASSERT_VALID_TID(tid);
 
+  // peterson's generalised algorithm for N threads/processes
   int i=0;
+  int j=0;
   for (i=0; i<m_num_threads-1; ++i){
     mu.level[tid] = i; 
     mu.waiting[i] = tid;
-    while (mu.waiting[i] == tid && m_check_others(tid, i)); // busy wait
+    for (j=0; j<m_num_threads; ++j){
+      while (j != tid && mu.level[j] >= i && mu.waiting[i] == tid);
+    }
   }
 
-}
-
-static int m_check_others(int const tid, int const caller_loop_index){
-
-  int i=0;
-  for (i=0; i<m_num_threads; ++i){
-
-    if (i == tid){
-      continue;
-    }
-
-    if (mu.level[i] >= caller_loop_index){
-      return 1;
-    }
-
-  }
-
-  return 0;
 }
 
 void m_unlock(int const tid) {

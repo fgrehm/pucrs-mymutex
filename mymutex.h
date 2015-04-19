@@ -1,4 +1,10 @@
 
+/*
+T1 SisOp Abril/2015
+Fabio Galvao Rehm
+Mateus Vendramini
+*/
+
 #ifndef MYMUTEX_H
 #define MYMUTEX_H
 

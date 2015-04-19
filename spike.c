@@ -1,51 +1,36 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "mymutex.h"
 
 #define NUM_THREADS 5
-#define MULTIPLIER 200
+#define NUM_PRINTS 300
 
-/*my_mutex mutexes[NUM_THREADS-1];
+void print(void* arg){
 
-void *print_numbers(void* arg) {
-  int tid = (int)(long int)arg;
-  int begin = tid * MULTIPLIER + 1;
-  int end = (tid + 1) * MULTIPLIER;
+  int tid =  (intptr_t)arg;
+  m_lock(tid);
 
-  if (tid > 0) {
-    m_lock(&mutexes[tid-1], tid);
+  int i=0;
+  for (i=0; i<NUM_PRINTS; ++i){
+    printf("%d\n", i);
   }
-
-  int i;
-  for (i = begin; i <= end; i++) {
-    printf("[%d] %04d\n", tid, i);
-  }
-
-  if (tid < NUM_THREADS-1) {
-    m_unlock(&mutexes[tid], tid);
-  }
-}*/
+  m_unlock(tid);
+}
 
 int main() {
 
-  printf("spike?\n");
   m_init(NUM_THREADS);
-
-/*  long int i;
-  for (i = 0; i < NUM_THREADS-1; i++) {
-    m_init(&mutexes[i], NUM_THREADS);
-    m_lock(&mutexes[i], i);
+  pthread_t threads[NUM_THREADS];
+  int i=0;
+  for (i=0; i<NUM_THREADS; ++i){
+    int rc = pthread_create(&threads[i], NULL, (void*)print, (void *) (intptr_t)i);
   }
 
-  pthread_t printers[NUM_THREADS];
-  for (i = 0; i < NUM_THREADS; i++) {
-    pthread_create(&printers[i], NULL, print_numbers, (void *)i);
-  }
-
-  pthread_exit(0);*/
-
+  pthread_exit(0);
   m_exit();
+
   return 0;
 }
 
