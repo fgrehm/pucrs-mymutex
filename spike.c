@@ -28,8 +28,10 @@ void *print_numbers(void* arg) {
 }*/
 
 int main() {
+
   printf("spike?\n");
   m_init(NUM_THREADS);
+
 /*  long int i;
   for (i = 0; i < NUM_THREADS-1; i++) {
     m_init(&mutexes[i], NUM_THREADS);
