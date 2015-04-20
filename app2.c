@@ -15,8 +15,16 @@ my_mutex mutex;
 my_mutex w_db;
 my_mutex r_db;
 
+void do_work(int tid, char* thread_type, char* work) {
+  printf("[%03d-%s] %s\n", tid, thread_type, work);
+  int s = random() % 2 + 1;
+  sleep(s);
+  printf("[%03d-%s] Fim\n", tid, thread_type);
+}
+
 // WRITER
 void *producer(void *arg){
+  int tid = (int)(long int)arg;
 
   while (1){
 
@@ -37,7 +45,7 @@ void *producer(void *arg){
     m_lock(&w_db, 1);
 
     // TODO: escrita
-    printf("escrevendo...\n");
+    do_work(tid, "Produtor", "Escrevendo...");
 
     //up(w_db)
     m_unlock(&w_db, 1);
@@ -60,6 +68,7 @@ void *producer(void *arg){
 
 // READER
 void *consumer(void *arg){
+  int tid = (int)(long int)arg;
 
   while (1){
 
@@ -89,7 +98,7 @@ void *consumer(void *arg){
     m_unlock(&mutex, 1);
 
     // TODO: leitura
-    printf("lendo...\n");
+    do_work(tid, "Consumidor", "Lendo...");
 
     //down(mutex_rc);
     m_lock(&mutex_rc, 1);
@@ -109,6 +118,7 @@ void *consumer(void *arg){
 }
 
 int main(int argc, char *argv[]) {
+  srandom(time(NULL));
 
   pthread_t producers[PRODUCERS], consumers[CONSUMERS];
 
