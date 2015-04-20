@@ -1,4 +1,3 @@
-
 all: spike app1 app2
 
 clean:
@@ -6,12 +5,11 @@ clean:
 	rm app1
 	rm app2
 
-spike: 
+spike: mymutex.* spike.*
 	gcc -o spike -pthread -g spike.c mymutex.c
 
-app1:
+app1: mymutex.* app1.*
 	gcc -o app1 -pthread -g app1.c mymutex.c
 
-app2:
+app2: mymutex.* app2.*
 	gcc -o app2 -pthread -g app2.c mymutex.c
-
