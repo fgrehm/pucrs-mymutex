@@ -4,96 +4,136 @@
 #include <semaphore.h>
 #include "mymutex.h"
 
-#define NUM_THREADS 5
-#define NUM_PRINTS 300
+#define PRODUCERS  3
+#define CONSUMERS  3
 
-/*
-
-// DECL
-rc
-wc
-mutex_rc
-mutex_wc
-mutex
-w_db
-r_db
-
-// INIT
-rc = 0
-wc = 0
-mutex_rc = 1
-mutex_wc = 1
-mutex = 1
-w_db = 1
-r_db = 1
+int rc;
+int wc;
+my_mutex mutex_rc;
+my_mutex mutex_wc;
+my_mutex mutex;
+my_mutex w_db;
+my_mutex r_db;
 
 // WRITER
-while (TRUE){
-down(mutex_wc);
-wc++;
-if (wc == 1)
-down(r_db);
-up(mutex_wc);
-down(w_db)
-...
-//Escrita
-...
-up(w_db)
-down(mutex_wc);
-wc--;
-if (wc == 0)
-up(r_db);
-up(mutex_wc);
+void *producer(void *arg){
+
+  while (1){
+
+    //down(mutex_wc);
+    m_lock(&mutex_wc, 1);
+
+    wc++;
+
+    if (wc == 1){
+      //down(r_db);
+      m_lock(&r_db, 1);
+    }
+
+    //up(mutex_wc);
+    m_unlock(&mutex_rc, 1);
+
+    //down(w_db)
+    m_lock(&w_db, 1);
+
+    // TODO: escrita
+    printf("escrevendo...\n");
+
+    //up(w_db)
+    m_unlock(&w_db, 1);
+
+    //down(mutex_wc);
+    m_unlock(&mutex_wc, 1);
+
+    wc--;
+    if (wc == 0){
+      //up(r_db);
+      m_unlock(&r_db, 1);
+    }
+
+    //up(mutex_wc);
+    m_unlock(&mutex_wc, 1);
+
+  }
+
 }
 
 // READER
-while (TRUE){
-down(mutex);
-down(r_db);
-down(mutex_rc);
-rc++;
-if (rc == 1)
-down(w_db);
-up(mutex_rc);
-up(r_db);
-up(mutex);
-...
-//Leitura dos dados
-...
-down(mutex_rc);
-rc--;
-if (rc == 0)
-up(w_db);
-up(mutex_rc); )
+void *consumer(void *arg){
 
-*/
+  while (1){
 
-/*
-void print(void* arg){
+    //down(mutex);
+    m_lock(&mutex, 1);
 
-  int tid =  (intptr_t)arg;
-  m_lock(tid);
+    //down(r_db);
+    m_lock(&r_db, 1);
 
-  int i=0;
-  for (i=0; i<NUM_PRINTS; ++i){
-    printf("%d\n", i);
+    //down(mutex_rc);
+    m_lock(&mutex_rc, 1);
+
+    rc++;
+
+    if (rc == 1){
+      //down(w_db);
+      m_lock(&w_db, 1);
+    }
+
+    //up(mutex_rc);
+    m_unlock(&mutex_rc, 1);
+
+    //up(r_db);
+    m_unlock(&r_db, 1);
+
+    //up(mutex);
+    m_unlock(&mutex, 1);
+
+    // TODO: leitura
+    printf("lendo...\n");
+
+    //down(mutex_rc);
+    m_lock(&mutex_rc, 1);
+
+    rc--;
+
+    if (rc == 0){
+      //up(w_db);
+      m_unlock(&w_db, 1);
+    }
+
+    //up(mutex_rc); 
+    m_unlock(&mutex_rc, 1);
+
   }
-  m_unlock(tid);
+
 }
-*/
 
-int main() {
-/*
-  m_init(NUM_THREADS);
-  pthread_t threads[NUM_THREADS];
+int main(int argc, char *argv[]) {
+
+  pthread_t producers[PRODUCERS], consumers[CONSUMERS];
+
+  // INIT
+  rc = 0;
+  wc = 0;
+  m_init(&mutex_rc, 1);
+  m_init(&mutex_wc, 1);
+  m_init(&mutex, 1);
+  m_init(&w_db, 1);
+  m_init(&r_db, 1);
+
   int i=0;
-  for (i=0; i<NUM_THREADS; ++i){
-    int rc = pthread_create(&threads[i], NULL, (void*)print, (void *) (intptr_t)i);
-  }
+  for (i = 0; i < PRODUCERS; i++)
+    pthread_create(&producers[i], NULL, producer, (void *)(intptr_t)i);
+  for (i = 0; i < CONSUMERS; i++)
+    pthread_create(&consumers[i], NULL, consumer, (void *)(intptr_t)i);
 
   pthread_exit(0);
-  m_exit();
-*/
+  m_free(&mutex_rc);
+  m_free(&mutex_wc);
+  m_free(&mutex);
+  m_free(&w_db);
+  m_free(&r_db);
+
   return 0;
 }
 
