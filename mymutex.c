@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "mymutex.h"
 
-#define ASSERT_VALID_TID(M,T) if (T >= 0 && T < M->num_threads) { /* ok! */ } else { printf("invalid tid.\n"); return; }
+#define ASSERT_VALID_TID(M,T) if (T >= 0 && T <= M->num_threads) { /* ok! */ } else { printf("invalid tid: [%d].\n", T); return; }
 
 void m_init(my_mutex *mu, int const num_threads) {
 
