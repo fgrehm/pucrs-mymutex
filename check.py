@@ -3,6 +3,7 @@
 if __name__ == "__main__":
     lastnum = -1
     curnum = -1
+    BOUND=299
     with open("out.txt") as f:
         while (True):
             line = f.readline()
@@ -22,6 +23,6 @@ if __name__ == "__main__":
             else:
                 lastnum = curnum
 
-            if lastnum == 299:
+            if lastnum == BOUND:
                 lastnum = -1
 
