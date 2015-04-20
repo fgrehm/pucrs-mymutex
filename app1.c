@@ -18,17 +18,23 @@ void *producer(void *arg){
   tid = (int)(long int)arg;
   while(1){
     item=random();
+
     //sem_wait(&empty);      /* wait() ou p() ou down() */
     m_lock(&empty, tid);
+
     //sem_wait(&mutex);      /* wait() ou p() ou down() */
-    m_lock(&mutex, tid);
+    m_lock(&mutex, 1);
+
     buffer[in]=item;
     printf("produtor %d escrevendo na pos %d\n", tid, in);
     in=(in+1)%NUM_THREADS;
+
     //sem_post(&mutex);      /* post() ou v() ou up() ou signal() */
-    m_unlock(&mutex, tid);
+    m_unlock(&mutex, 1);
+
     //sem_post(&full);      /* post() ou v() ou up() ou signal() */
     m_unlock(&full, tid);
+
   }
 }
 
@@ -37,17 +43,23 @@ void *consumer(void *arg){
 
   tid = (int)(long int)arg;
   while(1){
+
     //sem_wait(&full);      /* wait() ou p() ou down() */
     m_lock(&full, tid);
+
     //sem_wait(&mutex);      /* wait() ou p() ou down() */
-    m_lock(&mutex, tid);
+    m_lock(&mutex, 1);
+
     item=buffer[out];
     printf("consumidor %d retirando da pos %d\n", tid, out);
     out=(out+1)%NUM_THREADS;
+
     //sem_post(&mutex);      /* post() ou v() ou up() ou signal() */
-    m_unlock(&mutex, tid);
+    m_unlock(&mutex, 1);
+
     //sem_post(&empty);      /* post() ou v() ou up() ou signal() */
     m_unlock(&empty, tid);
+
     item=0;
   }
 }
