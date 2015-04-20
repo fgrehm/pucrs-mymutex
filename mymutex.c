@@ -35,7 +35,7 @@ void m_lock(my_mutex *mu, int const tid) {
   int i=0;
   int j=0;
   for (i=0; i<mu->num_threads-1; ++i){
-    mu->level[tid] = i; 
+    mu->level[tid] = i;
     mu->waiting[i] = tid;
     for (j=0; j<mu->num_threads; ++j){
       while (j != tid && mu->level[j] >= i && mu->waiting[i] == tid);

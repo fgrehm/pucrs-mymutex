@@ -101,7 +101,7 @@ void *consumer(void *arg){
       m_unlock(&w_db, 1);
     }
 
-    //up(mutex_rc); 
+    //up(mutex_rc);
     m_unlock(&mutex_rc, 1);
 
   }

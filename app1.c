@@ -67,7 +67,7 @@ void *consumer(void *arg){
 int main(int argc, char *argv[]){
   long int i;
   pthread_t producers[PRODUCERS], consumers[CONSUMERS];
-  
+
   //sem_init(&mutex,0,1);
   m_init(&mutex, 1);
   //sem_init(&empty,0,NUM_THREADS);
