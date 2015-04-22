@@ -22,7 +22,7 @@ sem_t w_db, r_db;
 
 void do_work(char* process_type, int thread_id, char* work, int min_wait) {
   printf("[%s-%d] %s\n", process_type, thread_id, work);
-  float r = random() % 2 + min_wait;
+  int r = random() % 2 + min_wait;
   sleep(r);
 }
 
@@ -55,6 +55,8 @@ void *writer(void* arg) {
 
 void *reader(void* arg) {
   int rid = (int)(long int)arg;
+  // This is needed since we spawn WRITERS threads before creating
+  // reader threads
   int tid = rid + WRITERS;
 
   while (1) {
