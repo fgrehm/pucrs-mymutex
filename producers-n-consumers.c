@@ -1,149 +1,94 @@
+/*
+T1 SisOp Abril/2015
+Fabio Galvao Rehm
+Mateus Vendramini
+*/
+
 #include <stdio.h>
 #include <stdint.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "mymutex.h"
 
+#define NUM_THREADS 5
 #define PRODUCERS  3
 #define CONSUMERS  3
 
-int rc;
-int wc;
-my_mutex mutex_rc;
-my_mutex mutex_wc;
-my_mutex mutex;
-my_mutex w_db;
-my_mutex r_db;
+//sem_t mutex, empty, full;
+my_mutex mutex, empty, full;
+int in=0, out=0, buffer[NUM_THREADS];
 
-void do_work(int tid, char* thread_type, char* work) {
-  printf("[%03d-%s] %s\n", tid, thread_type, work);
-  int s = random() % 2 + 1;
-  sleep(s);
-  printf("[%03d-%s] Fim\n", tid, thread_type);
-}
-
-// WRITER
 void *producer(void *arg){
-  int tid = (int)(long int)arg;
+  int item, tid;
 
-  while (1){
+  tid = (int)(long int)arg;
+  while(1){
+    item=random();
 
-    //down(mutex_wc);
-    m_lock(&mutex_wc, 1);
+    //sem_wait(&empty);      /* wait() ou p() ou down() */
+    m_lock(&empty, tid);
 
-    wc++;
-
-    if (wc == 1){
-      //down(r_db);
-      m_lock(&r_db, 1);
-    }
-
-    //up(mutex_wc);
-    m_unlock(&mutex_rc, 1);
-
-    //down(w_db)
-    m_lock(&w_db, 1);
-
-    // TODO: escrita
-    do_work(tid, "Produtor", "Escrevendo...");
-
-    //up(w_db)
-    m_unlock(&w_db, 1);
-
-    //down(mutex_wc);
-    m_unlock(&mutex_wc, 1);
-
-    wc--;
-    if (wc == 0){
-      //up(r_db);
-      m_unlock(&r_db, 1);
-    }
-
-    //up(mutex_wc);
-    m_unlock(&mutex_wc, 1);
-
-  }
-
-}
-
-// READER
-void *consumer(void *arg){
-  int tid = (int)(long int)arg;
-
-  while (1){
-
-    //down(mutex);
+    //sem_wait(&mutex);      /* wait() ou p() ou down() */
     m_lock(&mutex, 1);
 
-    //down(r_db);
-    m_lock(&r_db, 1);
+    buffer[in]=item;
+    printf("produtor %d escrevendo na pos %d\n", tid, in);
+    in=(in+1)%NUM_THREADS;
 
-    //down(mutex_rc);
-    m_lock(&mutex_rc, 1);
-
-    rc++;
-
-    if (rc == 1){
-      //down(w_db);
-      m_lock(&w_db, 1);
-    }
-
-    //up(mutex_rc);
-    m_unlock(&mutex_rc, 1);
-
-    //up(r_db);
-    m_unlock(&r_db, 1);
-
-    //up(mutex);
+    //sem_post(&mutex);      /* post() ou v() ou up() ou signal() */
     m_unlock(&mutex, 1);
 
-    // TODO: leitura
-    do_work(tid, "Consumidor", "Lendo...");
-
-    //down(mutex_rc);
-    m_lock(&mutex_rc, 1);
-
-    rc--;
-
-    if (rc == 0){
-      //up(w_db);
-      m_unlock(&w_db, 1);
-    }
-
-    //up(mutex_rc);
-    m_unlock(&mutex_rc, 1);
+    //sem_post(&full);      /* post() ou v() ou up() ou signal() */
+    m_unlock(&full, tid);
 
   }
-
 }
 
-int main(int argc, char *argv[]) {
-  srandom(time(NULL));
+void *consumer(void *arg){
+  int item, tid;
 
+  tid = (int)(long int)arg;
+  while(1){
+
+    //sem_wait(&full);      /* wait() ou p() ou down() */
+    m_lock(&full, tid);
+
+    //sem_wait(&mutex);      /* wait() ou p() ou down() */
+    m_lock(&mutex, 1);
+
+    item=buffer[out];
+    printf("consumidor %d retirando da pos %d\n", tid, out);
+    out=(out+1)%NUM_THREADS;
+
+    //sem_post(&mutex);      /* post() ou v() ou up() ou signal() */
+    m_unlock(&mutex, 1);
+
+    //sem_post(&empty);      /* post() ou v() ou up() ou signal() */
+    m_unlock(&empty, tid);
+
+    item=0;
+  }
+}
+
+int main(int argc, char *argv[]){
+  long int i;
   pthread_t producers[PRODUCERS], consumers[CONSUMERS];
 
-  // INIT
-  rc = 0;
-  wc = 0;
-  m_init(&mutex_rc, 1);
-  m_init(&mutex_wc, 1);
+  //sem_init(&mutex,0,1);
   m_init(&mutex, 1);
-  m_init(&w_db, 1);
-  m_init(&r_db, 1);
+  //sem_init(&empty,0,NUM_THREADS);
+  m_init(&empty, NUM_THREADS);
+  //sem_init(&full,0,0);
+  m_init(&full, NUM_THREADS);
 
-  int i=0;
-  for (i = 0; i < PRODUCERS; i++)
-    pthread_create(&producers[i], NULL, producer, (void *)(intptr_t)i);
-  for (i = 0; i < CONSUMERS; i++)
-    pthread_create(&consumers[i], NULL, consumer, (void *)(intptr_t)i);
+  for(i = 0; i < PRODUCERS; i++)
+    pthread_create(&producers[i], NULL, producer, (void *)i);
+  for(i = 0; i < CONSUMERS; i++)
+    pthread_create(&consumers[i], NULL, consumer, (void *)i);
 
   pthread_exit(0);
-  m_free(&mutex_rc);
-  m_free(&mutex_wc);
   m_free(&mutex);
-  m_free(&w_db);
-  m_free(&r_db);
-
-  return 0;
+  m_free(&empty);
+  m_free(&full);
+  return(0);
 }
-
