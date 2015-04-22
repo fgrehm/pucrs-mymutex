@@ -43,7 +43,7 @@ void *producer(void *arg){
     m_unlock(&w_db, 1);
 
     //down(mutex_wc);
-    m_unlock(&mutex_wc, 1);
+    m_lock(&mutex_wc, 1);
 
     wc--;
     if (wc == 0){
