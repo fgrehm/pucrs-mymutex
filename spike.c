@@ -1,43 +1,44 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "mymutex.h"
 
-#define NUM_THREADS 5
-#define NUM_PRINTS 300
+#define NUM_PROCS 5
+#define MULTIPLIER 200
 
-my_mutex mu;
+my_mutex mutexes[NUM_PROCS-1];
 
-void print(void* arg){
+void *print_numbers(void* arg) {
+  int tid = (int)(long int)arg;
+  int begin = tid * MULTIPLIER + 1;
+  int end = (tid + 1) * MULTIPLIER;
 
-  int tid =  (intptr_t)arg;
-  m_lock(&mu, tid);
-
-  int i=0;
-  for (i=0; i<NUM_PRINTS; ++i){
-    printf("%d\n", i);
+  if (tid > 0) {
+    m_lock(&mutexes[tid-1], tid);
   }
-  m_unlock(&mu, tid);
 
+  int i;
+  for (i = begin; i <= end; i++) {
+    printf("[%d] %04d\n", tid, i);
+  }
+
+  if (tid < NUM_PROCS-1) {
+    m_unlock(&mutexes[tid], tid);
+  }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
+  long int i;
+  for (i = 0; i < NUM_PROCS-1; i++) {
+    m_init(&mutexes[i], NUM_PROCS);
+    m_lock(&mutexes[i], i);
+  }
 
-  m_init(&mu, NUM_THREADS);
-  pthread_t threads[NUM_THREADS];
-  int i=0;
-  for (i=0; i<NUM_THREADS; ++i){
-    int rc = pthread_create(&threads[i], NULL, (void*)print, (void *) (intptr_t)i);
-    if (rc != 0){
-      printf("failed creating threads.\n");
-      return 1;
-    }
+  pthread_t printers[NUM_PROCS];
+  for (i = 0; i < NUM_PROCS; i++) {
+    pthread_create(&printers[i], NULL, print_numbers, (void *)i);
   }
 
   pthread_exit(0);
-  m_free(&mu);
-
   return 0;
 }
-
