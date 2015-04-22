@@ -1,4 +1,3 @@
-
 /*
 T1 SisOp Abril/2015
 Fabio Galvao Rehm
@@ -9,8 +8,8 @@ Mateus Vendramini
 #define MYMUTEX_H
 
 typedef struct my_mutex_struct {
-  int* level;
-  int* waiting;
+  int* tickets;
+  int* entering;
   int num_threads;
 } my_mutex;
 
