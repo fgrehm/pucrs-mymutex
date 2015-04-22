@@ -7,6 +7,5 @@ nbproject/private
 *.swp
 core
 spike
-app1
-app2
 readers-n-writers
+producers-n-consumers
